@@ -1,0 +1,30 @@
+-----------1. Find the date with the highest total energy consumption from the Meta/Facebook data centers.
+WITH CTE1 as
+(select * from fb_eu_energy eu
+UNION ALL
+select * from fb_asia_energy aa
+UNION ALL
+select * from fb_na_energy na),
+CTE2 as
+(select sum(consumption) total, date
+from CTE1
+group by date
+order by total desc)
+
+select date, total
+from CTE2
+where total = (select max(total) from CTE2)
+
+--------------------------2. What is the overall friend acceptance rate by date? 
+select a.date, count(b.user_id_receiver)/count(a.user_id_sender) :: decimal as acceptance_rate
+from 
+(select user_id_sender, user_id_receiver, date
+from fb_friend_requests
+where action = 'sent') a
+left join
+(select user_id_sender, user_id_receiver, date
+from fb_friend_requests
+where action = 'accepted') b
+on a.user_id_sender = b.user_id_sender
+and a.user_id_receiver = b.user_id_receiver
+group by a.date
